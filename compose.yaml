@@ -1,0 +1,20 @@
+name: feeds
+services:
+  feed-server:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    volumes:
+      - ${GTFS_DATA_PATH:-./gtfs-data}:/srv:ro
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+    networks:
+      - ${TRAEFIK_NETWORK:-traefik_proxy}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.feeds.rule=Host(`${FEEDS_DOMAIN:-feeds.simovi.org}`)"
+      - "traefik.http.routers.feeds.entrypoints=websecure"
+      - "traefik.http.routers.feeds.tls.certresolver=${TRAEFIK_CERT_RESOLVER:-letsencrypt}"
+      - "traefik.http.services.feeds.loadbalancer.server.port=80"
+networks:
+  traefik_proxy:
+    name: ${TRAEFIK_NETWORK:-traefik_proxy}
+    external: true

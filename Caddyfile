@@ -1,0 +1,16 @@
+{
+	# Disable the admin API; Traefik handles routing/TLS externally.
+	admin off
+}
+
+:80 {
+	root * /srv
+
+	# Directory listing is disabled by default (no `browse` directive);
+	# only exact file paths are served, e.g. /incofer/schedule/feed.zip
+	file_server
+
+	# Ensure GTFS-realtime protobuf feeds get a sane content type.
+	@pb path *.pb
+	header @pb Content-Type "application/octet-stream"
+}
