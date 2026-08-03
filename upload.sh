@@ -12,7 +12,7 @@ AGENCY="$1"
 FEED_TYPE="$2"
 LOCAL_FILE_PATH="$3"
 SERVER="fabarca@simovi.ucr.ac.cr"
-REMOTE_BASE="/opt/feeds/gtfs-data"
+REMOTE_BASE="~/feeds/gtfs-data"
 
 # Restrict to safe path segments to avoid writing outside REMOTE_BASE.
 if [[ ! "$AGENCY" =~ ^[a-zA-Z0-9_-]+$ ]] || [[ ! "$FEED_TYPE" =~ ^[a-zA-Z0-9_-]+$ ]]; then
@@ -30,7 +30,12 @@ EXTENSION="${LOCAL_FILE_PATH##*.}"
 REMOTE_FILENAME="feed.${EXTENSION}"
 
 REMOTE_DIR="${REMOTE_BASE}/${AGENCY}/${FEED_TYPE}"
+REMOTE_PATH="${REMOTE_DIR}/${REMOTE_FILENAME}"
 ssh "$SERVER" "mkdir -p ${REMOTE_DIR}"
-rsync -avz --progress --chmod=F644,D755 "$LOCAL_FILE_PATH" "${SERVER}:${REMOTE_DIR}/${REMOTE_FILENAME}"
+rsync -avz --progress "$LOCAL_FILE_PATH" "${SERVER}:${REMOTE_PATH}"
+
+# Older macOS rsync (2.6.9) doesn't support --chmod, so set permissions
+# remotely instead, ensuring the file is readable by the feed-server container.
+ssh "$SERVER" "chmod 644 ${REMOTE_PATH}"
 
 echo "Uploaded to https://feeds.simovi.org/${AGENCY}/${FEED_TYPE}/${REMOTE_FILENAME}"
