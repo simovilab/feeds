@@ -10,6 +10,13 @@
 	# only exact file paths are served, e.g. /incofer/schedule/feed.zip
 	file_server
 
+	# Feed files are overwritten in place at a stable URL, so without an explicit
+	# Cache-Control clients apply heuristic freshness (RFC 9111 4.2.2) and keep
+	# serving a stale feed. `no-cache` still allows caching, but forces
+	# revalidation against the ETag/Last-Modified, so unchanged feeds cost a 304.
+	@feeds path *.zip *.pb
+	header @feeds Cache-Control "no-cache"
+
 	# Ensure GTFS-realtime protobuf feeds get a sane content type.
 	@pb path *.pb
 	header @pb Content-Type "application/octet-stream"

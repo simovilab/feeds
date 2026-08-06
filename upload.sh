@@ -27,7 +27,7 @@ fi
 
 # Preserve the local file's extension on the remote (feed.zip, feed.pb, etc).
 EXTENSION="${LOCAL_FILE_PATH##*.}"
-REMOTE_FILENAME="feed.${EXTENSION}"
+REMOTE_FILENAME="gtfs.${EXTENSION}"
 
 REMOTE_DIR="${REMOTE_BASE}/${AGENCY}/${FEED_TYPE}"
 REMOTE_PATH="${REMOTE_DIR}/${REMOTE_FILENAME}"
