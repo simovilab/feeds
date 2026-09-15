@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GTFS feeds &mdash; SIMOVI</title>
+</head>
+<body>
+<h1>GTFS feeds</h1>
+<p>
+  Feeds live at <code>/&lt;agency&gt;/&lt;feed-type&gt;/&lt;file&gt;</code>. For example: <code>/incofer/schedule/gtfs.zip</code></p>. 
+<p>
+  Each file is overwritten in place, so the URLs below are stable.
+</p>
+<hr>
+{{- $hasFeeds := false }}
+{{- range $agency := (listFiles "/") }}
+{{- $agencyPath := printf "/%s" $agency }}
+{{- if (fileStat $agencyPath).IsDir }}
+{{- /* Collect first so an agency directory with no feed files renders nothing. */}}
+{{- $entries := list }}
+{{- range $feedType := (listFiles $agencyPath) }}
+{{- $feedTypePath := printf "%s/%s" $agencyPath $feedType }}
+{{- if (fileStat $feedTypePath).IsDir }}
+{{- range $file := (listFiles $feedTypePath) }}
+{{- $path := printf "%s/%s" $feedTypePath $file }}
+{{- $info := fileStat $path }}
+{{- if not $info.IsDir }}
+{{- $href := printf "/%s/%s/%s" (pathEscape $agency) (pathEscape $feedType) (pathEscape $file) }}
+{{- $entries = append $entries (dict "href" $href "label" (printf "%s/%s/%s" $agency $feedType $file) "info" $info) }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- if $entries }}
+{{- $hasFeeds = true }}
+<h2>{{ $agency }}</h2>
+<ul>
+{{- range $entry := $entries }}
+  <li>
+    <a href="{{ $entry.href }}">{{ $entry.label }}</a>
+    &mdash; {{ humanize "size" (printf "%d" $entry.info.Size) }},
+    updated {{ $entry.info.ModTime.UTC.Format "2006-01-02 15:04 UTC" }}
+  </li>
+{{- end }}
+</ul>
+{{- end }}
+{{- end }}
+{{- end }}
+{{- if not $hasFeeds }}
+<p>No feeds are available yet.</p>
+{{- end }}
+<hr>
+<p>The feeds are compliant with the <a href="https://gtfs.org/documentation/schedule/reference/" target="_blank">GTFS Schedule reference</a> and are provided by the <a href="https://simovi.org" target="_blank">Intelligent Mobility Systems Lab (SIMOVI)</a> from the University of Costa Rica.</p>
+</body>
+</html>

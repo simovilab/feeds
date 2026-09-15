@@ -4,20 +4,43 @@
 }
 
 :80 {
-	root * /srv
+	# The landing page is stored outside the feed volume: /srv is mounted
+	# read-only, so Docker cannot create a mountpoint for a file inside it.
+	@index path / /index.html
+	handle @index {
+		root * /etc/caddy/site
+		rewrite * /index.html
 
-	# Directory listing is disabled by default (no `browse` directive);
-	# only exact file paths are served, e.g. /incofer/schedule/feed.zip
-	file_server
+		# Template evaluation can read files and the environment, so it is
+		# scoped to this handler and never applied to feed payloads. `root`
+		# points the file functions at the feed volume so the page can list
+		# what is actually on disk.
+		templates {
+			root /srv
+		}
 
-	# Feed files are overwritten in place at a stable URL, so without an explicit
-	# Cache-Control clients apply heuristic freshness (RFC 9111 4.2.2) and keep
-	# serving a stale feed. `no-cache` still allows caching, but forces
-	# revalidation against the ETag/Last-Modified, so unchanged feeds cost a 304.
-	@feeds path *.zip *.pb
-	header @feeds Cache-Control "no-cache"
+		# The listing is generated per request; never serve a stale one.
+		header Cache-Control "no-cache"
 
-	# Ensure GTFS-realtime protobuf feeds get a sane content type.
-	@pb path *.pb
-	header @pb Content-Type "application/octet-stream"
+		file_server
+	}
+
+	handle {
+		root * /srv
+
+		# Directory listing is disabled by default (no `browse` directive);
+		# only exact file paths are served, e.g. /incofer/schedule/feed.zip
+		file_server
+
+		# Feed files are overwritten in place at a stable URL, so without an explicit
+		# Cache-Control clients apply heuristic freshness (RFC 9111 4.2.2) and keep
+		# serving a stale feed. `no-cache` still allows caching, but forces
+		# revalidation against the ETag/Last-Modified, so unchanged feeds cost a 304.
+		@feeds path *.zip *.pb
+		header @feeds Cache-Control "no-cache"
+
+		# Ensure GTFS-realtime protobuf feeds get a sane content type.
+		@pb path *.pb
+		header @pb Content-Type "application/octet-stream"
+	}
 }

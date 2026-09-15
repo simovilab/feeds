@@ -5,6 +5,9 @@ services:
     restart: unless-stopped
     volumes:
       - ${GTFS_DATA_PATH:-./gtfs-data}:/srv:ro
+      # Kept outside /srv: that volume is read-only, so Docker cannot create
+      # a mountpoint inside it. The Caddyfile serves the index from here.
+      - ./index.html:/etc/caddy/site/index.html:ro
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
     networks:
       - ${TRAEFIK_NETWORK:-traefik_proxy}

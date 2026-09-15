@@ -1,0 +1,24 @@
+# Local-only config for testing index.html natively (no Docker), using
+# paths relative to this repo instead of the container's /srv layout.
+# Run: caddy run --config Caddyfile.dev
+{
+	admin off
+}
+
+:8080 {
+	@index path / /index.html
+	handle @index {
+		root * .
+		rewrite * /index.html
+		templates {
+			root ./gtfs-data
+		}
+		header Cache-Control "no-cache"
+		file_server
+	}
+
+	handle {
+		root * ./gtfs-data
+		file_server
+	}
+}
